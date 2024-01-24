@@ -51,7 +51,7 @@
                   <div class="col-8">
                       <div class="card">
                         <div class="card-header">                            
-                            <h1><span>Forecast For</span></h1>
+                            <h1><span>Forecast Thang</span></h1>
                             <div class="row align-items-center location">                            
                               <div class="col" id="city"></div>
                               <div class="col algin-self-start" id="state"></div>
@@ -69,17 +69,6 @@
                             <button onclick="fetchWeather(document.getElementById('longitude').value, document.getElementById('latitude').value)">Try it</button>
                             </div>
                             <div id="forecastProperties"></div>
-                            <!-- <div>
-                              <p>Date: <span id="Date"></span></p>
-                              <p>Temperature: <span id="Temperature"></span></p>
-                              <p>Humidity: <span id="Humidity"></span></p>
-                              <p>Sky-Cover: <span id="Sky-Cover"></span></p>
-                              <p>Wind Direction: <span id="Wind-Direction"></span></p>
-                              <p>Wind Speed (mph): <span id="Wind-Speed"></span></p>
-                              <p>Weather: <span id="Weather"></span></p>
-                              <p>Hazards: <span id="Hazards"></span></p>
-                              <p>Snowfall Amount (in): <span id="Snowfall-Amount"></span></p>
-                            </div> -->
                             <div>
                               <h2>Get The Forecast:</h2>
                               <div id="Forecast" class="row"></div>
@@ -111,11 +100,14 @@
   var forecastData = await forecastResponse.json();
 
   // Create Forecast Display
-  CreateForecastCard(metadataR);
+  CreateForecastCard(metadataR, forecastData);
+  SetWeather(forecastData);
   SetMinMaxTemp(forecastData);
+  SetTemperature(forecastData);
+  SetHumidity(forecastData);
   }
 
-  function CreateForecastCard(metadataR){
+  function CreateForecastCard(metadataR, forecastData){
     var carddiv = document.createElement("div");
     carddiv.classList = "card";
     carddiv.id = "forecast-container";
@@ -130,8 +122,25 @@
     statediv.classList = "col";
     statediv.id = "state";
     statediv.innerHTML = metadataR.properties.relativeLocation.properties.state;;
-      document.getElementById("city").innerHTML = metadataR.properties.relativeLocation.properties.city;
     document.getElementById("forecast-container").appendChild(statediv);
+    var elevdiv = document.createElement("h5");
+    elevdiv.classList = "col";
+    elevdiv.id = "elevation";
+    elevdiv.innerHTML = "Elevation: " + forecastData.properties.elevation.value + " Meters";;
+    document.getElementById("forecast-container").appendChild(elevdiv);
+  }
+
+
+  function GetWeather(forecastData){
+    var items = [];
+    for(i = 0; i < 4; i++){
+      var temp = {date: forecastData.properties.weather.values[i].validTime, 
+      coverage: forecastData.properties.weather.values[i].value.coverage,
+      weather: forecastData.properties.weather.values[i].value.weather,
+      intensity: forecastData.properties.weather.values[i].value.intensity}
+      items[i] = temp;
+    }
+    return items;
   }
 
   function GetMinMaxVals(forecastData){
@@ -143,6 +152,85 @@
       items[i] = temp;
     }
     return items;
+  }
+
+  function GetTemperature(forecastData){
+    var items = [];
+    for(i = 0; i < 110; i++){
+      var temp = {date: forecastData.properties.apparentTemperature.values[i].validTime, 
+      temperature: forecastData.properties.apparentTemperature.values[i].value}
+      items[i] = temp;
+    }
+    return items;
+  }
+
+  function GetHumidity(forecastData){
+    var items = [];
+    for(i = 0; i < 110; i++){
+      var temp = {date: forecastData.properties.relativeHumidity.values[i].validTime, 
+      humidity: forecastData.properties.relativeHumidity.values[i].value}
+      items[i] = temp;
+    }
+    return items;
+  }
+
+
+
+
+  function SetWeather(forecastData){
+    var h3 = document.createElement("h3");
+    h3.classList = "col";
+    h3.innerHTML = "Weather 7 Day Forecast";
+    h3.style = "font-weight: bold; font size: 3em;"
+    document.getElementById("forecast-container").appendChild(h3);
+    var temptable = document.createElement("table");
+    temptable.classList = "weather-table table table-bordered";
+    temptable.id = "weather-table";
+    temptable.style = ""
+    document.getElementById("forecast-container").appendChild(temptable);
+    var thead = document.createElement("thead");
+    thead.classList = "weather-thead";
+    thead.id = "weather-thead";
+    document.getElementById("weather-table").appendChild(thead);
+    var tr = document.createElement("tr");
+    tr.classList = "weather-tr";
+    tr.id = "weather-tr";
+    document.getElementById("weather-thead").appendChild(tr);
+    var thdate = document.createElement("th");
+    thdate.classList = "weather-th";
+    thdate.id = "weather-th";
+    thdate.innerHTML = "Date";
+    document.getElementById("weather-tr").appendChild(thdate);
+    var thmax = document.createElement("th");
+    thmax.classList = "weather-th";
+    thmax.id = "weather-th";
+    thmax.innerHTML = "Weather";
+    document.getElementById("weather-tr").appendChild(thmax);
+    var thcov = document.createElement("th");
+    thcov.classList = "weather-th";
+    thcov.id = "weather-th";
+    thcov.innerHTML = "Coverage";
+    document.getElementById("weather-tr").appendChild(thcov);
+    var thint = document.createElement("th");
+    thint.classList = "weather-th";
+    thint.id = "weather-th";
+    thint.innerHTML = "Intensity";
+    document.getElementById("weather-tr").appendChild(thint);
+
+    const table = document.getElementById("weather-table");
+
+    const minMax = GetWeather(forecastData);
+    minMax.forEach( item => {
+      let row = table.insertRow();
+      let date = row.insertCell(0);
+      date.innerHTML = item.date;
+      let weather = row.insertCell(1);
+      weather.innerHTML = item.weather;
+      let coverage = row.insertCell(2);
+      coverage.innerHTML = item.coverage;
+      let intensity = row.insertCell(3);
+      intensity.innerHTML = item.intensity;
+    });
   }
 
   function SetMinMaxTemp(forecastData){
@@ -189,66 +277,97 @@
       date.innerHTML = item.date;
       let maxTemp = row.insertCell(1);
       maxTemp.innerHTML = item.maxTemp;
-      let minTemp = row.insertCell(1);
+      let minTemp = row.insertCell(2);
       minTemp.innerHTML = item.minTemp;
     });
-
-    // var carddiv = document.createElement("div");
-    // carddiv.classList = "card";
-    // carddiv.id = "minmax-container";
-    // carddiv.innerHTML = "High and Low 7 Day Forecast";
-    // carddiv.style = "font-weight: bold; font size: 3em;"
-    // document.getElementById("forecast-container").appendChild(carddiv);
-
-    // for(i = 0; i < 8; i++){
-    //   var contdiv = document.createElement("table");
-    //   contdiv.classList = "temp-contianer";
-    //   contdiv.style = "width: 12.5%;"
-    //   contdiv.id = "temp-container-" + i;
-    //   document.getElementById("minmax-container").appendChild(contdiv);
-
-    //   var tempdiv = document.createElement("div");
-    //   tempdiv.style.width = "12.5%";
-    //   tempdiv.style.height = "15%";
-    //   tempdiv.style.background = "white";
-    //   tempdiv.style.color = "black";
-    //   tempdiv.classList = "row temp-val";
-    //   tempdiv.id = "temp-" + i;
-    //   document.getElementById("temp-container-" + i).appendChild(tempdiv);
-    //   var tempspan = document.createElement("span");
-    //   var time = forecastData.properties.maxTemperature.values[i].validTime;
-    //   tempspan.classList = "temp-time-val";
-    //   tempspan.innerHTML = time;
-    //   document.getElementById("temp-" + i).appendChild(tempspan);
-
-    //   var maxtempdiv = document.createElement("div");
-    //   maxtempdiv.style.width = "12.5%";
-    //   maxtempdiv.style.height = "30%";
-    //   maxtempdiv.style.background = "white";
-    //   maxtempdiv.style.color = "red";
-    //   maxtempdiv.classList = "row temp-val";
-    //   maxtempdiv.id = "max-temp-" + i;
-    //   document.getElementById("temp-container-" + i).appendChild(maxtempdiv);
-    //   var maxtempspan = document.createElement("span");
-    //   var tempH = forecastData.properties.maxTemperature.values[i].value
-    //   maxtempspan.classList = "max-temp-val";
-    //   maxtempspan.innerHTML = tempH;
-    //   document.getElementById("max-temp-" + i).appendChild(maxtempspan);
-
-    //   var mintempdiv = document.createElement("div");
-    //   mintempdiv.style.width = "12.5%";
-    //   mintempdiv.style.height = "30%";
-    //   mintempdiv.style.background = "white";
-    //   mintempdiv.style.color = "blue";
-    //   mintempdiv.classList = "row temp-val";
-    //   mintempdiv.id = "min-temp-" + i;
-    //   document.getElementById("temp-container-" + i).appendChild(mintempdiv);
-    //   var mintempspan = document.createElement("span");
-    //   var tempL = forecastData.properties.minTemperature.values[i].value
-    //   mintempspan.classList = "min-temp-val";
-    //   mintempspan.innerHTML = tempL;
-    //   document.getElementById("min-temp-" + i).appendChild(mintempspan);
   }
+
+  function SetTemperature(forecastData){
+    var h3 = document.createElement("h3");
+    h3.classList = "col";
+    h3.innerHTML = "Temperature 7 Day Forecast";
+    h3.style = "font-weight: bold; font size: 3em;"
+    document.getElementById("forecast-container").appendChild(h3);
+    var temptable = document.createElement("table");
+    temptable.classList = "temperature-table table table-bordered";
+    temptable.id = "temperature-table";
+    temptable.style = ""
+    document.getElementById("forecast-container").appendChild(temptable);
+    var thead = document.createElement("thead");
+    thead.classList = "temperature-thead";
+    thead.id = "temperature-thead";
+    document.getElementById("temperature-table").appendChild(thead);
+    var tr = document.createElement("tr");
+    tr.classList = "temperature-tr";
+    tr.id = "temperature-tr";
+    document.getElementById("temperature-thead").appendChild(tr);
+    var thdate = document.createElement("th");
+    thdate.classList = "temperature-th";
+    thdate.id = "temperature-th";
+    thdate.innerHTML = "Date";
+    document.getElementById("temperature-tr").appendChild(thdate);
+    var thmax = document.createElement("th");
+    thmax.classList = "temperature-th";
+    thmax.id = "temperature-th";
+    thmax.innerHTML = "Temperature";
+    document.getElementById("temperature-tr").appendChild(thmax);
+
+    const table = document.getElementById("temperature-table");
+
+    const minMax = GetTemperature(forecastData);
+    minMax.forEach( item => {
+      let row = table.insertRow();
+      let date = row.insertCell(0);
+      date.style = "font-size: 0.5em; width: 1em:";
+      date.innerHTML = item.date;
+      let temperature= row.insertCell(1);
+      temperature.style = "font-size: 0.5em; width: 1em:";
+      temperature.innerHTML = item.temperature;
+    });
+  }
+
+  function SetHumidity(forecastData){
+    var h3 = document.createElement("h3");
+    h3.classList = "col";
+    h3.innerHTML = "Humidity 7 Day Forecast";
+    h3.style = "font-weight: bold; font size: 3em;"
+    document.getElementById("forecast-container").appendChild(h3);
+    var temptable = document.createElement("table");
+    temptable.classList = "humidity-table table table-bordered";
+    temptable.id = "humidity-table";
+    temptable.style = ""
+    document.getElementById("forecast-container").appendChild(temptable);
+    var thead = document.createElement("thead");
+    thead.classList = "humidity-thead";
+    thead.id = "humidity-thead";
+    document.getElementById("humidity-table").appendChild(thead);
+    var tr = document.createElement("tr");
+    tr.classList = "humidity-tr";
+    tr.id = "humidity-tr";
+    document.getElementById("humidity-thead").appendChild(tr);
+    var thdate = document.createElement("th");
+    thdate.classList = "humidity-th";
+    thdate.id = "humidity-th";
+    thdate.innerHTML = "Date";
+    document.getElementById("humidity-tr").appendChild(thdate);
+    var thmax = document.createElement("th");
+    thmax.classList = "humidity-th";
+    thmax.id = "humidity-th";
+    thmax.innerHTML = "Humidity";
+    document.getElementById("humidity-tr").appendChild(thmax);
+
+    const table = document.getElementById("humidity-table");
+
+    const minMax = GetHumidity(forecastData);
+    minMax.forEach( item => {
+      let row = table.insertRow();
+      let date = row.insertCell(0);
+      date.innerHTML = item.date;
+      let humidity= row.insertCell(1);
+      humidity.innerHTML = item.humidity;
+    });
+  }
+
 </script>
 <style>
   .location {font-weight: bold;}
