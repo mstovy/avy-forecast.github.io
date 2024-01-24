@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="eng">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.2.3.js"></script>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/css/blog.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+            integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    </head>
+<header class="p-3 mb-3 border-bottom">
+    <div class="container">
+      <div class="row flex-wrap align-items-center justify-content-center row">
+        <a href="/" class="d-flex col align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
+            AVY FORECAST
+        </a>
+
+        <div class="nav col-4 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+          <div class="av-text"><a href="/" class="px-2">Home</a></div>
+          <div class="av-text"><a href="/locations" class="px-2">Locations</a></div>
+        </div>
+
+        <form class="col-5 col-lg-auto mb-3 mb-lg-0 me-lg-3">
+          <input type="search" class="form-control" placeholder="Search..." aria-label="Search">
+        </form>
+
+        <div class="col-1 dropdown text-end">
+          <a href="/" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="rounded-circle" width="32" height="32"></button>
+          </a>
+          <ul class="dropdown-menu text-small" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item" href="#">New project...</a></li>
+            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li><a class="dropdown-item" href="#">Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Sign out</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+        <div class="page-container">
+            <div class="content-wrap">
+                <div class="row">
+                  <div class="col-2">
+
+                  </div>
+                  <div class="col-8">
+                      <div class="card">
+                        <div class="card-header">                            
+                            <h1><span>Forecast For</span></h1>
+                            <div class="row align-items-center location">                            
+                              <div class="col" id="city"></div>
+                              <div class="col algin-self-start" id="state"></div>
+                          </div>
+                          <div class="card-body">
+
+                            <div>
+                              <label for="latitude">Latitude</label>
+                            <input id="latitude" placeholder="39.05"></input>
+                            <div>
+                              <label for="longitude">Longitude</label>
+                            <input id="longitude" placeholder="-105.51"></input>
+                            </div>
+                            <div>
+                            <button onclick="fetchWeather(document.getElementById('longitude').value, document.getElementById('latitude').value)">Try it</button>
+                            </div>
+                            <div id="forecastProperties"></div>
+                            <!-- <div>
+                              <p>Date: <span id="Date"></span></p>
+                              <p>Temperature: <span id="Temperature"></span></p>
+                              <p>Humidity: <span id="Humidity"></span></p>
+                              <p>Sky-Cover: <span id="Sky-Cover"></span></p>
+                              <p>Wind Direction: <span id="Wind-Direction"></span></p>
+                              <p>Wind Speed (mph): <span id="Wind-Speed"></span></p>
+                              <p>Weather: <span id="Weather"></span></p>
+                              <p>Hazards: <span id="Hazards"></span></p>
+                              <p>Snowfall Amount (in): <span id="Snowfall-Amount"></span></p>
+                            </div> -->
+                            <div>
+                              <h2>Get The Forecast:</h2>
+                              <div id="Forecast" class="row"></div>
+                            </div>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+            </div>
+        </div>
+</html>
+
+<script>
+
+  async function fetchWeather(_longitude,_latitude) {
+  var latitude = _latitude;
+  var longitude = _longitude;
+
+  // Construct the API endpoint for the daily forecast
+  var endpointUrl = 'https://api.weather.gov/points/' + latitude + ',' + longitude;
+  // Fetch metadata from the API
+  var metadataResponse = await fetch(endpointUrl);
+  var metadataR  = await metadataResponse.json();
+  
+  // Extract the forecast grid data URL
+  var gridDataUrl = metadataR.properties.forecastGridData;
+  // Fetch forecast data from the grid data URL
+  var forecastResponse = await fetch(gridDataUrl);
+  var forecastData = await forecastResponse.json();
+
+  // Create Forecast Display
+  CreateForecastCard(metadataR);
+  SetMinMaxTemp(forecastData);
+  }
+
+  function CreateForecastCard(metadataR){
+    var carddiv = document.createElement("div");
+    carddiv.classList = "card";
+    carddiv.id = "forecast-container";
+    document.getElementById("Forecast").appendChild(carddiv);
+
+    var citydiv = document.createElement("h2");
+    citydiv.classList = "col";
+    citydiv.id = "city";
+    citydiv.innerHTML = metadataR.properties.relativeLocation.properties.city;
+    document.getElementById("forecast-container").appendChild(citydiv);
+    var statediv = document.createElement("h2");
+    statediv.classList = "col";
+    statediv.id = "state";
+    statediv.innerHTML = metadataR.properties.relativeLocation.properties.state;;
+      document.getElementById("city").innerHTML = metadataR.properties.relativeLocation.properties.city;
+    document.getElementById("forecast-container").appendChild(statediv);
+  }
+
+  function GetMinMaxVals(forecastData){
+    var items = [];
+    for(i = 0; i < 8; i++){
+      var temp = {date: forecastData.properties.maxTemperature.values[i].validTime, 
+      maxTemp: forecastData.properties.maxTemperature.values[i].value,
+      minTemp: forecastData.properties.minTemperature.values[i].value}
+      items[i] = temp;
+    }
+    return items;
+  }
+
+  function SetMinMaxTemp(forecastData){
+    var h3 = document.createElement("h3");
+    h3.classList = "col";
+    h3.innerHTML = "High and Low 7 Day Forecast";
+    h3.style = "font-weight: bold; font size: 3em;"
+    document.getElementById("forecast-container").appendChild(h3);
+    var temptable = document.createElement("table");
+    temptable.classList = "minmax-table table table-bordered";
+    temptable.id = "minmax-table";
+    temptable.style = ""
+    document.getElementById("forecast-container").appendChild(temptable);
+    var thead = document.createElement("thead");
+    thead.classList = "minmax-thead";
+    thead.id = "minmax-thead";
+    document.getElementById("minmax-table").appendChild(thead);
+    var tr = document.createElement("tr");
+    tr.classList = "minmax-tr";
+    tr.id = "minmax-tr";
+    document.getElementById("minmax-thead").appendChild(tr);
+    var thdate = document.createElement("th");
+    thdate.classList = "minmax-th";
+    thdate.id = "minmax-th";
+    thdate.innerHTML = "Date";
+    document.getElementById("minmax-tr").appendChild(thdate);
+    var thmax = document.createElement("th");
+    thmax.classList = "minmax-th";
+    thmax.id = "minmax-th";
+    thmax.innerHTML = "Max Temp";
+    document.getElementById("minmax-tr").appendChild(thmax);
+    var thmin = document.createElement("th");
+    thmin.classList = "minmax-th";
+    thmin.id = "minmax-th";
+    thmin.innerHTML = "Min Temp";
+    document.getElementById("minmax-tr").appendChild(thmin);
+
+    const table = document.getElementById("minmax-table");
+
+    const minMax = GetMinMaxVals(forecastData);
+    minMax.forEach( item => {
+      let row = table.insertRow();
+      let date = row.insertCell(0);
+      date.innerHTML = item.date;
+      let maxTemp = row.insertCell(1);
+      maxTemp.innerHTML = item.maxTemp;
+      let minTemp = row.insertCell(1);
+      minTemp.innerHTML = item.minTemp;
+    });
+
+    // var carddiv = document.createElement("div");
+    // carddiv.classList = "card";
+    // carddiv.id = "minmax-container";
+    // carddiv.innerHTML = "High and Low 7 Day Forecast";
+    // carddiv.style = "font-weight: bold; font size: 3em;"
+    // document.getElementById("forecast-container").appendChild(carddiv);
+
+    // for(i = 0; i < 8; i++){
+    //   var contdiv = document.createElement("table");
+    //   contdiv.classList = "temp-contianer";
+    //   contdiv.style = "width: 12.5%;"
+    //   contdiv.id = "temp-container-" + i;
+    //   document.getElementById("minmax-container").appendChild(contdiv);
+
+    //   var tempdiv = document.createElement("div");
+    //   tempdiv.style.width = "12.5%";
+    //   tempdiv.style.height = "15%";
+    //   tempdiv.style.background = "white";
+    //   tempdiv.style.color = "black";
+    //   tempdiv.classList = "row temp-val";
+    //   tempdiv.id = "temp-" + i;
+    //   document.getElementById("temp-container-" + i).appendChild(tempdiv);
+    //   var tempspan = document.createElement("span");
+    //   var time = forecastData.properties.maxTemperature.values[i].validTime;
+    //   tempspan.classList = "temp-time-val";
+    //   tempspan.innerHTML = time;
+    //   document.getElementById("temp-" + i).appendChild(tempspan);
+
+    //   var maxtempdiv = document.createElement("div");
+    //   maxtempdiv.style.width = "12.5%";
+    //   maxtempdiv.style.height = "30%";
+    //   maxtempdiv.style.background = "white";
+    //   maxtempdiv.style.color = "red";
+    //   maxtempdiv.classList = "row temp-val";
+    //   maxtempdiv.id = "max-temp-" + i;
+    //   document.getElementById("temp-container-" + i).appendChild(maxtempdiv);
+    //   var maxtempspan = document.createElement("span");
+    //   var tempH = forecastData.properties.maxTemperature.values[i].value
+    //   maxtempspan.classList = "max-temp-val";
+    //   maxtempspan.innerHTML = tempH;
+    //   document.getElementById("max-temp-" + i).appendChild(maxtempspan);
+
+    //   var mintempdiv = document.createElement("div");
+    //   mintempdiv.style.width = "12.5%";
+    //   mintempdiv.style.height = "30%";
+    //   mintempdiv.style.background = "white";
+    //   mintempdiv.style.color = "blue";
+    //   mintempdiv.classList = "row temp-val";
+    //   mintempdiv.id = "min-temp-" + i;
+    //   document.getElementById("temp-container-" + i).appendChild(mintempdiv);
+    //   var mintempspan = document.createElement("span");
+    //   var tempL = forecastData.properties.minTemperature.values[i].value
+    //   mintempspan.classList = "min-temp-val";
+    //   mintempspan.innerHTML = tempL;
+    //   document.getElementById("min-temp-" + i).appendChild(mintempspan);
+  }
+</script>
+<style>
+  .location {font-weight: bold;}
+  .temp-val {font-size: 0.5em;}
+  #location {height: 5em;}
+</style>
